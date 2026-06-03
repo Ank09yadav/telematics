@@ -32,16 +32,26 @@ export function useSensorPipeline() {
     let gyroSub: any = null;
     let mockInterval: any = null;
 
-    // Detect if we are in a simulator or web browser
-    const isMockMode = Platform.OS === 'web' || !Device.isDevice;
-
     async function startPipeline() {
       // Reset filter and physics engines
       accelLpfRef.current.reset();
       gyroLpfRef.current.reset();
       detectorRef.current.reset();
 
-      if (isMockMode) {
+      const isWeb = Platform.OS === 'web';
+      let sensorsAvailable = false;
+
+      if (!isWeb) {
+        try {
+          const isAccelAvailable = await Accelerometer.isAvailableAsync();
+          const isGyroAvailable = await Gyroscope.isAvailableAsync();
+          sensorsAvailable = isAccelAvailable && isGyroAvailable;
+        } catch (e) {
+          console.warn('Sensors availability check failed:', e);
+        }
+      }
+
+      if (isWeb || !sensorsAvailable) {
         // Start Mock Telemetry Simulation
         let time = 0;
         mockInterval = setInterval(() => {
@@ -90,28 +100,32 @@ export function useSensorPipeline() {
         }, Config.sensorPollInterval);
       } else {
         // Start physical hardware sensors
-        Accelerometer.setUpdateInterval(Config.sensorPollInterval);
-        Gyroscope.setUpdateInterval(Config.sensorPollInterval);
+        try {
+          Accelerometer.setUpdateInterval(Config.sensorPollInterval);
+          Gyroscope.setUpdateInterval(Config.sensorPollInterval);
 
-        accelSub = Accelerometer.addListener((data) => {
-          const rawX = data.x * Config.gravity;
-          const rawY = data.y * Config.gravity;
-          const rawZ = data.z * Config.gravity;
+          accelSub = Accelerometer.addListener((data) => {
+            const rawX = data.x * Config.gravity;
+            const rawY = data.y * Config.gravity;
+            const rawZ = data.z * Config.gravity;
 
-          const filtered = accelLpfRef.current.filter([rawX, rawY, rawZ]);
-          accelDataRef.current = filtered;
+            const filtered = accelLpfRef.current.filter([rawX, rawY, rawZ]);
+            accelDataRef.current = filtered;
 
-          const mag = Math.sqrt(filtered[0] ** 2 + filtered[1] ** 2 + filtered[2] ** 2) / Config.gravity;
-          
-          useDriveStore.getState().updateSensors(filtered[0] / Config.gravity, filtered[1] / Config.gravity, filtered[2] / Config.gravity, mag);
-          
-          runDetection();
-        });
+            const mag = Math.sqrt(filtered[0] ** 2 + filtered[1] ** 2 + filtered[2] ** 2) / Config.gravity;
+            
+            useDriveStore.getState().updateSensors(filtered[0] / Config.gravity, filtered[1] / Config.gravity, filtered[2] / Config.gravity, mag);
+            
+            runDetection();
+          });
 
-        gyroSub = Gyroscope.addListener((data) => {
-          const filtered = gyroLpfRef.current.filter([data.x, data.y, data.z]);
-          gyroDataRef.current = filtered;
-        });
+          gyroSub = Gyroscope.addListener((data) => {
+            const filtered = gyroLpfRef.current.filter([data.x, data.y, data.z]);
+            gyroDataRef.current = filtered;
+          });
+        } catch (err) {
+          console.error('Failed to subscribe to hardware sensors:', err);
+        }
       }
     }
 

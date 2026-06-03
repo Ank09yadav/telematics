@@ -18,10 +18,10 @@ export function useLocationTracker() {
   const [permissionGranted, setPermissionGranted] = useState<boolean>(false);
   const subscriptionRef = useRef<Location.LocationSubscription | null>(null);
 
-  // Request location permission on mount (only for real devices)
+  // Request location permission on mount
   useEffect(() => {
-    const isMockMode = Platform.OS === 'web' || !Device.isDevice;
-    if (isMockMode) {
+    const isWeb = Platform.OS === 'web';
+    if (isWeb) {
       setPermissionGranted(true);
       return;
     }
@@ -44,7 +44,7 @@ export function useLocationTracker() {
 
   // Listen to driving state and toggle GPS / Mock subscription
   useEffect(() => {
-    const isMockMode = Platform.OS === 'web' || !Device.isDevice;
+    const isWeb = Platform.OS === 'web';
     let mockInterval: any = null;
 
     async function startTracking() {
@@ -53,7 +53,17 @@ export function useLocationTracker() {
         return;
       }
 
-      if (isMockMode) {
+      let gpsAvailable = false;
+      if (!isWeb) {
+        try {
+          const hasServices = await Location.hasServicesEnabledAsync();
+          gpsAvailable = hasServices && permissionGranted;
+        } catch (e) {
+          console.warn('GPS services check failed:', e);
+        }
+      }
+
+      if (isWeb || !gpsAvailable) {
         // --- Simulated Driving Route ---
         let lat = 37.7749;
         let lon = -122.4194;
