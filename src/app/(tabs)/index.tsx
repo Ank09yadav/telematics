@@ -17,17 +17,19 @@ export default function HomeScreen() {
   const db = useSQLiteContext();
   const isDriving = useDriveStore((state) => state.isDriving);
   const startTrip = useDriveStore((state) => state.startTrip);
+  const refreshStats = useDriveStore((state) => state.refreshStats);
   
   const [alerts, setAlerts] = useState<SafetyAlert[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Retrieve recent active alerts on focus
+  // Retrieve recent active alerts and refresh safety stats on focus
   useFocusEffect(
     React.useCallback(() => {
       let isMounted = true;
-      async function fetchRecentAlerts() {
+      async function fetchData() {
         try {
           setIsLoading(true);
+          await refreshStats(db);
           const data = await AlertsRepository.getAlerts(db);
           if (isMounted) {
             setAlerts(data.slice(0, 2)); // Show only 2 recent alerts
@@ -38,11 +40,11 @@ export default function HomeScreen() {
           setIsLoading(false);
         }
       }
-      fetchRecentAlerts();
+      fetchData();
       return () => {
         isMounted = false;
       };
-    }, [db])
+    }, [db, refreshStats])
   );
 
   const handleToggleProtection = () => {

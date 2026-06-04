@@ -6,6 +6,7 @@ import { useDriveStore } from '../../store/useDriveStore';
 export default function ProfileStats() {
   const safeDays = useDriveStore((state) => state.safeDays);
   const healthScore = useDriveStore((state) => state.healthScore);
+  const crashCount = useDriveStore((state) => state.crashCount);
 
   return (
     <View style={styles.statsRow}>
@@ -20,7 +21,7 @@ export default function ProfileStats() {
       </View>
       <View style={styles.statDivider} />
       <View style={styles.statBox}>
-        <Text style={styles.statVal}>0</Text>
+        <Text style={styles.statVal}>{crashCount}</Text>
         <Text style={styles.statLbl}>Crashes</Text>
       </View>
     </View>

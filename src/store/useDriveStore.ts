@@ -28,6 +28,7 @@ interface DriveState {
   healthScore: number;
   responseMs: number;
   safeDays: number;
+  crashCount: number;
   
   // Actions
   startTrip: () => void;
@@ -56,6 +57,7 @@ interface DriveState {
   toggleSpeedMonitor: () => void;
   toggleNotifications: () => void;
   toggleLocationSharing: () => void;
+  refreshStats: (db: SQLiteDatabase) => Promise<void>;
 }
 
 // Haversine distance calculator between two coordinates (returns meters)
@@ -106,6 +108,7 @@ export const useDriveStore = create<DriveState>((set, get) => ({
   healthScore: 98,
   responseMs: 12,
   safeDays: 142,
+  crashCount: 0,
 
   startTrip: () => {
     const timestamp = Date.now();
@@ -327,5 +330,57 @@ export const useDriveStore = create<DriveState>((set, get) => ({
   toggleSpeedMonitor: () => set((state) => ({ speedMonitorEnabled: !state.speedMonitorEnabled })),
   toggleNotifications: () => set((state) => ({ notificationsEnabled: !state.notificationsEnabled })),
   toggleLocationSharing: () => set((state) => ({ locationSharingEnabled: !state.locationSharingEnabled })),
+  refreshStats: async (db: SQLiteDatabase) => {
+    const startTime = Date.now();
+    try {
+      // 1. Calculate health score (average safety score of trips)
+      const tripStats = await db.getFirstAsync<{ avg_score: number | null }>(
+        'SELECT AVG(score) as avg_score FROM trips;'
+      );
+      const healthScore = (tripStats && tripStats.avg_score !== null)
+        ? Math.round(tripStats.avg_score)
+        : 100;
+
+      // 2. Calculate safe days (days since last high-severity alert or since first trip)
+      const lastHighAlert = await db.getFirstAsync<{ timestamp: number }>(
+        "SELECT timestamp FROM alerts WHERE severity = 'high' ORDER BY timestamp DESC LIMIT 1;"
+      );
+      
+      let safeDays = 0;
+      if (lastHighAlert) {
+        const diffTime = Date.now() - lastHighAlert.timestamp;
+        safeDays = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
+      } else {
+        const firstTrip = await db.getFirstAsync<{ start_time: number }>(
+          "SELECT start_time FROM trips ORDER BY start_time ASC LIMIT 1;"
+        );
+        if (firstTrip) {
+          const diffTime = Date.now() - firstTrip.start_time;
+          safeDays = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+        } else {
+          safeDays = 0;
+        }
+      }
+
+      // 3. Get crash count (sudden impacts)
+      const crashStats = await db.getFirstAsync<{ count: number }>(
+        "SELECT COUNT(*) as count FROM alerts WHERE type = 'sudden_impact';"
+      );
+      const crashCount = crashStats ? crashStats.count : 0;
+
+      // 4. Measure response latency
+      const queryTime = Date.now() - startTime;
+      const responseMs = Math.max(8, queryTime + 2); // real DB query time + overhead
+
+      set({
+        healthScore,
+        safeDays,
+        crashCount,
+        responseMs,
+      });
+    } catch (err) {
+      console.error('Error refreshing drive stats from DB:', err);
+    }
+  },
 }));
 export default useDriveStore;

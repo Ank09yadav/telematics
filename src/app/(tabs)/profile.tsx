@@ -1,7 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { useSQLiteContext } from 'expo-sqlite';
+import { useFocusEffect } from 'expo-router';
 import { Colors } from '../../constants/theme';
 import { Settings } from 'lucide-react-native';
+import { useDriveStore } from '../../store/useDriveStore';
 
 // Import extracted sub-components
 import ProfileHeader from '../../components/profile/ProfileHeader';
@@ -10,6 +13,14 @@ import PreferencesCard from '../../components/profile/PreferencesCard';
 import SettingsActionsList from '../../components/profile/SettingsActionsList';
 
 export default function ProfileScreen() {
+  const db = useSQLiteContext();
+  const refreshStats = useDriveStore((state) => state.refreshStats);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      refreshStats(db);
+    }, [db, refreshStats])
+  );
   const handleSignOut = () => {
     Alert.alert(
       'Sign Out',

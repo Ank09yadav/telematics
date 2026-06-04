@@ -51,4 +51,29 @@ export async function initializeDatabase(db: SQLiteDatabase) {
       longitude REAL
     );
   `);
+
+  // Create contacts table (for emergency contacts)
+  await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS contacts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      phone TEXT NOT NULL,
+      type TEXT NOT NULL
+    );
+  `);
+
+  // Check if we need to migrate/re-seed from old US default contacts to Indian emergency contacts
+  const firstContact = await db.getFirstAsync<{ name: string }>('SELECT name FROM contacts ORDER BY id ASC LIMIT 1;');
+  if (firstContact && firstContact.name === 'Roadside Assistance') {
+    // Clear old default contacts
+    await db.runAsync('DELETE FROM contacts;');
+  }
+
+  // Seed default contacts if empty
+  const contactCount = await db.getFirstAsync<{ count: number }>('SELECT COUNT(*) as count FROM contacts;');
+  if (contactCount && contactCount.count === 0) {
+    await db.runAsync("INSERT INTO contacts (name, phone, type) VALUES ('National Emergency Number', '112', 'emergency');");
+    await db.runAsync("INSERT INTO contacts (name, phone, type) VALUES ('Medical Emergency (Ambulance)', '108', 'emergency');");
+    await db.runAsync("INSERT INTO contacts (name, phone, type) VALUES ('National Highway Helpline', '1033', 'dispatch');");
+  }
 }

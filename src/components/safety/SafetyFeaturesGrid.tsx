@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, Switch } from 'react-native';
+import { View, Text, StyleSheet, Switch, Alert, Platform, Linking } from 'react-native';
 import { Activity, MapPin, Volume2, Gauge } from 'lucide-react-native';
+import * as Location from 'expo-location';
 import { Colors } from '../../constants/theme';
 import { useDriveStore } from '../../store/useDriveStore';
 
@@ -14,6 +15,53 @@ export default function SafetyFeaturesGrid() {
   const toggleLiveLocation = useDriveStore((state) => state.toggleLiveLocation);
   const toggleSoundAlert = useDriveStore((state) => state.toggleSoundAlert);
   const toggleSpeedMonitor = useDriveStore((state) => state.toggleSpeedMonitor);
+
+  const handleToggleLiveLocation = async (value: boolean) => {
+    if (value) {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert(
+            'Location Permission Required',
+            'Foreground location access is required to enable Live Location sharing.'
+          );
+          return;
+        }
+
+        const servicesEnabled = await Location.hasServicesEnabledAsync();
+        if (!servicesEnabled) {
+          if (Platform.OS === 'android') {
+            try {
+              await Location.enableNetworkProviderAsync();
+            } catch {
+              Alert.alert(
+                'Location Services Disabled',
+                'Please enable device location services to use Live Location tracking.'
+              );
+              return;
+            }
+          } else {
+            Alert.alert(
+              'Location Services Disabled',
+              'Please enable location services in your device settings to use Live Location tracking.',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Settings', onPress: () => Linking.openSettings() }
+              ]
+            );
+            return;
+          }
+        }
+
+        toggleLiveLocation();
+      } catch (err) {
+        console.error('Error requesting location activation:', err);
+        Alert.alert('Location Error', 'Could not access or enable location services.');
+      }
+    } else {
+      toggleLiveLocation();
+    }
+  };
 
   return (
     <View style={styles.featureGrid}>
@@ -42,7 +90,7 @@ export default function SafetyFeaturesGrid() {
           </View>
           <Switch
             value={liveLocationEnabled}
-            onValueChange={toggleLiveLocation}
+            onValueChange={handleToggleLiveLocation}
             trackColor={{ false: '#2D3142', true: 'rgba(0, 200, 83, 0.2)' }}
             thumbColor={liveLocationEnabled ? Colors.primary : '#64748B'}
           />
