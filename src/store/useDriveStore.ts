@@ -5,6 +5,7 @@ import { DriveRepository } from '../database/driveRepository';
 import { AlertsRepository, SafetyAlert } from '../database/alertsRepository';
 import { SQLiteDatabase } from 'expo-sqlite';
 import Config from '../constants/config';
+import { playSound } from '../utils/soundPlayer';
 
 interface DriveState {
   isDriving: boolean;
@@ -112,6 +113,11 @@ export const useDriveStore = create<DriveState>((set, get) => ({
 
   startTrip: () => {
     const timestamp = Date.now();
+    
+    if (get().soundAlertEnabled) {
+      playSound('start');
+    }
+
     set({
       isDriving: true,
       currentSpeed: 0,
@@ -232,6 +238,15 @@ export const useDriveStore = create<DriveState>((set, get) => ({
   addEvent: async (event, db) => {
     const state = get();
     if (!state.isDriving || !state.activeTrip) return;
+
+    // Play event sound if sound alerts are enabled
+    if (state.soundAlertEnabled) {
+      if (event.type === 'harsh_braking') {
+        playSound('crash');
+      } else {
+        playSound('hs');
+      }
+    }
 
     const eventWithId = {
       ...event,
