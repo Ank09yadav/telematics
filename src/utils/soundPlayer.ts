@@ -1,4 +1,4 @@
-import { Audio } from 'expo-av';
+import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 
 /**
  * Plays a sound based on the telemetry event type.
@@ -16,19 +16,19 @@ export async function playSound(soundType: 'start' | 'hs' | 'crash') {
 
     if (soundFile) {
       // Configure audio mode to support silent mode override and background playback
-      await Audio.setAudioModeAsync({
-        playsInSilentModeIOS: true,
-        staysActiveInBackground: true,
-        playThroughEarpieceAndroid: false,
+      await setAudioModeAsync({
+        playsInSilentMode: true,
+        shouldPlayInBackground: true,
       });
 
-      const { sound } = await Audio.Sound.createAsync(soundFile);
-      await sound.playAsync();
+      const player = createAudioPlayer(soundFile);
+      player.play();
 
-      // Unload from memory after playback finishes to prevent resource leaks
-      sound.setOnPlaybackStatusUpdate((status) => {
-        if (status.isLoaded && status.didJustFinish) {
-          sound.unloadAsync().catch((err) => console.warn('Error unloading sound:', err));
+      // Listen for playback finished and release resources to prevent memory leaks
+      const subscription = player.addListener('playbackStatusUpdate', (status) => {
+        if (status && status.didJustFinish) {
+          player.release();
+          subscription.remove();
         }
       });
     }

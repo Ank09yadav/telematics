@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, Switch, Alert, Platform, Linking } from 'react-native';
 import { Activity, MapPin, Volume2, Gauge } from 'lucide-react-native';
 import * as Location from 'expo-location';
@@ -13,8 +13,43 @@ export default function SafetyFeaturesGrid() {
 
   const toggleCrashDetection = useDriveStore((state) => state.toggleCrashDetection);
   const toggleLiveLocation = useDriveStore((state) => state.toggleLiveLocation);
+  const setLiveLocation = useDriveStore((state) => state.setLiveLocation);
   const toggleSoundAlert = useDriveStore((state) => state.toggleSoundAlert);
   const toggleSpeedMonitor = useDriveStore((state) => state.toggleSpeedMonitor);
+
+  // Monitor device location status and permissions
+  useEffect(() => {
+    let isMounted = true;
+
+    async function checkDeviceLocation() {
+      // Skip status check on Web as it doesn't support hasServicesEnabledAsync cleanly
+      if (Platform.OS === 'web') return;
+
+      try {
+        const servicesEnabled = await Location.hasServicesEnabledAsync();
+        const { status } = await Location.getForegroundPermissionsAsync();
+
+        if (!servicesEnabled || status !== 'granted') {
+          if (liveLocationEnabled && isMounted) {
+            setLiveLocation(false);
+          }
+        }
+      } catch (err) {
+        console.error('Error checking device location services status:', err);
+      }
+    }
+
+    // Run initial check
+    checkDeviceLocation();
+
+    // Set up a 3-second interval check to automatically disable the switch if user turns off GPS
+    const interval = setInterval(checkDeviceLocation, 3000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [liveLocationEnabled, setLiveLocation]);
 
   const handleToggleLiveLocation = async (value: boolean) => {
     if (value) {

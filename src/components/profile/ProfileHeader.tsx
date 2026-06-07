@@ -1,25 +1,48 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { Shield } from 'lucide-react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Shield, Pencil } from 'lucide-react-native';
 import { Colors } from '../../constants/theme';
 
-export default function ProfileHeader() {
+interface ProfileHeaderProps {
+  name: string;
+  email: string;
+  onEditPress: () => void;
+}
+
+export default function ProfileHeader({ name, email, onEditPress }: ProfileHeaderProps) {
+  // Generate user initials dynamically
+  const getInitials = (nameString: string) => {
+    if (!nameString) return 'U';
+    const parts = nameString.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  };
+
   return (
     <View style={styles.profileCard}>
       <View style={styles.avatarSection}>
         <View style={styles.avatarGlow}>
           <View style={styles.avatarCircle}>
-            <Text style={styles.avatarText}>DC</Text>
+            <Text style={styles.avatarText}>{getInitials(name)}</Text>
           </View>
         </View>
         <View style={styles.badgeContainer}>
           <Shield size={10} color="#0E1711" style={{ marginRight: 3 }} />
           <Text style={styles.badgeText}>PROTECTED</Text>
         </View>
+        
+        {/* Floating Edit Pencil Button */}
+        <TouchableOpacity 
+          style={styles.editPenBtn} 
+          onPress={onEditPress}
+          activeOpacity={0.85}
+        >
+          <Pencil size={12} color="#0E1711" strokeWidth={2.5} />
+        </TouchableOpacity>
       </View>
       
-      <Text style={styles.userName}>David Carter</Text>
-      <Text style={styles.userEmail}>david.carter@safeguard.io</Text>
+      <Text style={styles.userName}>{name}</Text>
+      <Text style={styles.userEmail}>{email}</Text>
     </View>
   );
 }
@@ -81,6 +104,24 @@ const styles = StyleSheet.create({
     fontSize: 8,
     fontWeight: '900',
     letterSpacing: 0.5,
+  },
+  editPenBtn: {
+    position: 'absolute',
+    right: -2,
+    bottom: 2,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: Colors.surface,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2.5,
+    elevation: 5,
   },
   userName: {
     color: Colors.text,

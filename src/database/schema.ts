@@ -62,6 +62,18 @@ export async function initializeDatabase(db: SQLiteDatabase) {
     );
   `);
 
+  // Create profile table
+  await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS profile (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      phone TEXT NOT NULL,
+      blood_group TEXT,
+      vehicle_no TEXT
+    );
+  `);
+
   // Check if we need to migrate/re-seed from old US default contacts to Indian emergency contacts
   const firstContact = await db.getFirstAsync<{ name: string }>('SELECT name FROM contacts ORDER BY id ASC LIMIT 1;');
   if (firstContact && firstContact.name === 'Roadside Assistance') {
@@ -75,5 +87,13 @@ export async function initializeDatabase(db: SQLiteDatabase) {
     await db.runAsync("INSERT INTO contacts (name, phone, type) VALUES ('National Emergency Number', '112', 'emergency');");
     await db.runAsync("INSERT INTO contacts (name, phone, type) VALUES ('Medical Emergency (Ambulance)', '108', 'emergency');");
     await db.runAsync("INSERT INTO contacts (name, phone, type) VALUES ('National Highway Helpline', '1033', 'dispatch');");
+  }
+
+  // Seed default profile if empty
+  const profileCount = await db.getFirstAsync<{ count: number }>('SELECT COUNT(*) as count FROM profile;');
+  if (profileCount && profileCount.count === 0) {
+    await db.runAsync(
+      "INSERT INTO profile (name, email, phone, blood_group, vehicle_no) VALUES ('David Carter', 'david.carter@safeguard.io', '+91 98765 43210', 'O+', 'DL-3C-AB-1234');"
+    );
   }
 }

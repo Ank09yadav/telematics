@@ -54,6 +54,7 @@ interface DriveState {
   // Toggle triggers
   toggleCrashDetection: () => void;
   toggleLiveLocation: () => void;
+  setLiveLocation: (enabled: boolean) => void;
   toggleSoundAlert: () => void;
   toggleSpeedMonitor: () => void;
   toggleNotifications: () => void;
@@ -341,6 +342,7 @@ export const useDriveStore = create<DriveState>((set, get) => ({
   // Toggle implementations
   toggleCrashDetection: () => set((state) => ({ crashDetectionEnabled: !state.crashDetectionEnabled })),
   toggleLiveLocation: () => set((state) => ({ liveLocationEnabled: !state.liveLocationEnabled })),
+  setLiveLocation: (enabled) => set({ liveLocationEnabled: enabled }),
   toggleSoundAlert: () => set((state) => ({ soundAlertEnabled: !state.soundAlertEnabled })),
   toggleSpeedMonitor: () => set((state) => ({ speedMonitorEnabled: !state.speedMonitorEnabled })),
   toggleNotifications: () => set((state) => ({ notificationsEnabled: !state.notificationsEnabled })),

@@ -1,14 +1,15 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Key, FileText, ChevronRight, TrendingUp, HeartHandshake, LogOut } from 'lucide-react-native';
+import { Key, FileText, ChevronRight, TrendingUp, HeartHandshake } from 'lucide-react-native';
 import { Colors } from '../../constants/theme';
 
 interface SettingsActionsListProps {
   onCalibrate: () => void;
-  onSignOut: () => void;
+  onHelpDesk: () => void;
+  onTerms: () => void;
 }
 
-export default function SettingsActionsList({ onCalibrate, onSignOut }: SettingsActionsListProps) {
+export default function SettingsActionsList({ onCalibrate, onHelpDesk, onTerms }: SettingsActionsListProps) {
   return (
     <View style={styles.container}>
       <Text style={styles.sectionTitle}>Security & Calibration</Text>
@@ -34,7 +35,13 @@ export default function SettingsActionsList({ onCalibrate, onSignOut }: Settings
         <View style={styles.menuDivider} />
 
         {/* Emergency Key */}
-        <TouchableOpacity style={styles.menuItemBtn} activeOpacity={0.7}>
+        <TouchableOpacity 
+          style={styles.menuItemBtn} 
+          activeOpacity={0.7}
+          onPress={() => {
+            alert('SOS emergency key is active and linked with local dispatch systems.');
+          }}
+        >
           <View style={styles.menuItemLeft}>
             <View style={[styles.iconWrapper, { backgroundColor: 'rgba(255, 82, 82, 0.08)' }]}>
               <Key size={18} color={Colors.alert} />
@@ -51,7 +58,11 @@ export default function SettingsActionsList({ onCalibrate, onSignOut }: Settings
       {/* Help & Terms */}
       <Text style={styles.sectionTitle}>Support & About</Text>
       <View style={styles.menuCard}>
-        <TouchableOpacity style={styles.menuItemBtn} activeOpacity={0.7}>
+        <TouchableOpacity 
+          style={styles.menuItemBtn} 
+          onPress={onHelpDesk}
+          activeOpacity={0.7}
+        >
           <View style={styles.menuItemLeft}>
             <View style={[styles.iconWrapper, { backgroundColor: 'rgba(255, 255, 255, 0.03)' }]}>
               <HeartHandshake size={18} color={Colors.text} />
@@ -63,7 +74,11 @@ export default function SettingsActionsList({ onCalibrate, onSignOut }: Settings
 
         <View style={styles.menuDivider} />
 
-        <TouchableOpacity style={styles.menuItemBtn} activeOpacity={0.7}>
+        <TouchableOpacity 
+          style={styles.menuItemBtn} 
+          onPress={onTerms}
+          activeOpacity={0.7}
+        >
           <View style={styles.menuItemLeft}>
             <View style={[styles.iconWrapper, { backgroundColor: 'rgba(255, 255, 255, 0.03)' }]}>
               <FileText size={18} color={Colors.text} />
@@ -73,16 +88,6 @@ export default function SettingsActionsList({ onCalibrate, onSignOut }: Settings
           <ChevronRight size={16} color={Colors.textSecondary} />
         </TouchableOpacity>
       </View>
-
-      {/* Sign Out Button */}
-      <TouchableOpacity 
-        style={styles.signOutButton} 
-        onPress={onSignOut}
-        activeOpacity={0.8}
-      >
-        <LogOut size={18} color={Colors.alert} style={{ marginRight: 8 }} />
-        <Text style={styles.signOutText}>Sign Out Account</Text>
-      </TouchableOpacity>
     </View>
   );
 }
@@ -149,21 +154,5 @@ const styles = StyleSheet.create({
   menuDivider: {
     height: 1,
     backgroundColor: Colors.border,
-  },
-  signOutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255, 82, 82, 0.04)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 82, 82, 0.12)',
-    paddingVertical: 14,
-    borderRadius: 16,
-    marginTop: 8,
-  },
-  signOutText: {
-    color: Colors.alert,
-    fontSize: 13,
-    fontWeight: '700',
   },
 });
