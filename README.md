@@ -274,3 +274,12 @@ npx expo start
 *   Press `a` to run on an Android emulator or connected device.
 *   Press `i` to run on an iOS simulator.
 *   Press `w` to run in a web browser (runs in mock telemetry simulation mode).
+
+### screenshot 
+<img width="520" height="1400" alt="2" src="https://github.com/user-attachments/assets/f395bf95-0418-414a-a831-31cf5286bbeb" />
+<img width="520" height="1400" alt="3" src="https://github.com/user-attachments/assets/64316b85-c267-487b-8d6e-c2b024f3bb0a" />
+<img width="720" height="1600" alt="4" src="https://github.com/user-attachments/assets/1a177310-ef34-4e23-8118-84ba9c498ec3" />
+<img width="720" height="1600" alt="6" src="https://github.com/user-attachments/assets/90070d20-c2e8-49f4-af4e-fa57d96b5b58" />
+<img width="720" height="1600" alt="5" src="https://github.com/user-attachments/assets/488ffe6d-8290-4820-822a-0df3fcb874cb" />
+
+
