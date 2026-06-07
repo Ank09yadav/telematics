@@ -15,6 +15,10 @@ Telematics SafeGuard is a state-of-the-art mobile telematics and safety monitori
 *   **SafeGuard Alerts Feed**: A unified feed tracking driving anomalies, high-severity warning levels, sudden impacts (crashes), and SOS signals with full timestamp and location mapping support.
 *   **SOS & Emergency Contact Manager**: Seeded with default Indian emergency helplines (112 Emergency, 108 Ambulance, 1033 National Highway) and supports custom contact entry. Features a press-and-hold panic button to dispatch SOS alerts.
 *   **Post-Drive Summaries**: Review detailed summaries of completed trips, complete with interactive maps displaying routes, start/end pins, and markers representing harsh maneuvers.
+*   **Safety Profile Dashboard**: Displays driver identity, vehicle details, emergency mobile numbers, and medical conditions (blood group) directly on the screen, backed by persistent SQLite storage.
+*   **Interactive DP Profile Editor**: Floating pencil button on the user's avatar triggers a modern glassmorphic edit modal with fields for quick updates and custom validations.
+*   **SafeGuard Help Desk**: Built-in step-by-step user onboarding and configuration walkthrough explaining telemetry thresholds, battery saver exceptions, and SOS timer functions.
+*   **Indian Protection Policy Compliance**: Full company policy documentation aligning application telematics tracking with the **Digital Personal Data Protection (DPDP) Act, 2023** and **Information Technology Act, 2000** of India.
 
 ---
 
@@ -184,6 +188,14 @@ erDiagram
         TEXT phone
         TEXT type
     }
+    profile {
+        INTEGER id PK
+        TEXT name
+        TEXT email
+        TEXT phone
+        TEXT blood_group
+        TEXT vehicle_no
+    }
     trips ||--o{ events : "contains (1:N, CASCADE)"
 ```
 
@@ -233,6 +245,15 @@ Emergency contacts configured for the SOS button.
 *   *National Emergency Number (`112`)*
 *   *Medical Emergency Ambulance (`108`)*
 *   *National Highway Helpline (`1033`)*
+
+#### 5. `profile`
+Stores the local user safety profile data.
+*   `id`: Primary Key (Auto-Increment)
+*   `name`: Full name of the user
+*   `email`: Email address for correspondence/reports
+*   `phone`: Emergency contact mobile number
+*   `blood_group`: Blood group info (e.g. `O+`, `AB-`)
+*   `vehicle_no`: Unique vehicle license plate identifier (e.g., `DL-3C-AB-1234`)
 
 ---
 
